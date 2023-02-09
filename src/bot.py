@@ -6,9 +6,15 @@ from aiogram import Bot
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from core.settings import bot_settings
+from core.database import database
 
 
-async def main():
+async def on_startup() -> None:
+    if not database.exists():
+        database.create_database()
+
+
+async def main() -> None:
     logging.basicConfig(
         level=logging.DEBUG,
         format='%(asctime)s :: %(levelname)s :: %(name)s :: %(message)s'
@@ -16,6 +22,8 @@ async def main():
 
     dispatcher = Dispatcher(storage=MemoryStorage())
     bot = Bot(token=bot_settings.bot_token.get_secret_value())
+
+    dispatcher.startup.register(on_startup)
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dispatcher.start_polling(
